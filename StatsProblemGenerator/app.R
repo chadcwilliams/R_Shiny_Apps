@@ -8,6 +8,7 @@ library(rsconnect)
 library(BSDA)
 library(rhandsontable) #Data Tables
 library(ggplot2)
+library(fmsb)
 
 #UI
 ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}")),
@@ -128,11 +129,12 @@ server = function(input, output) {
                 Median = median(data),
                 Mean = mean(data),
                 Range = range(data)[2] - range(data)[1],
-                SIQR = (quantile(data)[[4]] - quantile(data)[[2]]) / 2,
+                SIQR = SIQR(data),
                 MAD = median(abs(data - median(data))),
                 SS = sum((data - mean(data)) ^ 2),
                 Var = var(data),
-                SD = sd(data)
+                SD = sd(data),
+                SkewP = (3*(mean(data)-median(data)))/sd(data)
             )
             #Clear the Duplicate Values
             if (dim(descriptives)[1] > 1) {
