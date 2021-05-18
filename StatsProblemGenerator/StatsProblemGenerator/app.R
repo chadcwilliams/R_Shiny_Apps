@@ -122,17 +122,25 @@ server = function(input, output) {
                 tabulate_x = tabulate(match(data, unique_x))
                 unique_x[tabulate_x == max(tabulate_x)]
             }
+            #Setup Semi-Interquartile Range Function
+            siqr = function(data){
+                sorted_data = sort(data)
+                q1 = mean(c(sorted_data[floor((length(sorted_data)+1)*(1/4))],sorted_data[ceiling((length(sorted_data)+1)*(1/4))]))
+                q3 = mean(c(sorted_data[floor((length(sorted_data)+1)*(3/4))],sorted_data[ceiling((length(sorted_data)+1)*(3/4))]))
+                (q3-q1)/2
+            }
             #Create Stats
             descriptives = data_table = data.frame(
                 Mode = mod(data),
                 Median = median(data),
                 Mean = mean(data),
                 Range = range(data)[2] - range(data)[1],
-                SIQR = (quantile(data)[[4]] - quantile(data)[[2]]) / 2,
+                SIQR = siqr(data),
                 MAD = median(abs(data - median(data))),
                 SS = sum((data - mean(data)) ^ 2),
-                Var = var(data),
-                SD = sd(data)
+                Var = sum((data - mean(data)) ^ 2)/input$num_of_participants,
+                SD = sqrt(sum((data - mean(data)) ^ 2)/input$num_of_participants),
+                SkewP = (3*(mean(data)-median(data)))/sd(data)
             )
             #Clear the Duplicate Values
             if (dim(descriptives)[1] > 1) {
