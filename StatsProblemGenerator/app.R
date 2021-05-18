@@ -132,8 +132,8 @@ server = function(input, output) {
                 SIQR = SIQR(data),
                 MAD = median(abs(data - median(data))),
                 SS = sum((data - mean(data)) ^ 2),
-                Var = var(data),
-                SD = sd(data),
+                Var = sum((data - mean(data)) ^ 2)/input$num_of_participants,
+                SD = sqrt(sum((data - mean(data)) ^ 2)/input$num_of_participants),
                 SkewP = (3*(mean(data)-median(data)))/sd(data)
             )
             #Clear the Duplicate Values
