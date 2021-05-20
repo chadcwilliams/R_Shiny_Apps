@@ -125,8 +125,13 @@ server = function(input, output) {
             #Setup Semi-Interquartile Range Function
             siqr = function(data){
                 sorted_data = sort(data)
-                q1 = mean(c(sorted_data[floor((length(sorted_data)+1)*(1/4))],sorted_data[ceiling((length(sorted_data)+1)*(1/4))]))
-                q3 = mean(c(sorted_data[floor((length(sorted_data)+1)*(3/4))],sorted_data[ceiling((length(sorted_data)+1)*(3/4))]))
+                if (length(sorted_data)%%2==0){
+                    q1 = median(sorted_data[1:(length(sorted_data)/2)])
+                    q3 = median(sorted_data[((length(sorted_data)/2)+1):length(sorted_data)])
+                }else{
+                    q1 = median(sorted_data[1:((length(sorted_data)-1)/2)])
+                    q3 = median(sorted_data[((length(sorted_data)-((length(sorted_data)-1)/2))+1):length(sorted_data)])
+                }
                 (q3-q1)/2
             }
             #Create Stats
