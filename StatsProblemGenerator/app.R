@@ -145,7 +145,7 @@ server = function(input, output) {
                 SS = sum((data - mean(data)) ^ 2),
                 Var = sum((data - mean(data)) ^ 2)/input$num_of_participants,
                 SD = sqrt(sum((data - mean(data)) ^ 2)/input$num_of_participants),
-                SkewP = (3*(mean(data)-median(data)))/sd(data)
+                SkewP = (3*(mean(data)-median(data)))/sqrt(sum((data - mean(data)) ^ 2)/input$num_of_participants)
             )
             #Clear the Duplicate Values
             if (dim(descriptives)[1] > 1) {
