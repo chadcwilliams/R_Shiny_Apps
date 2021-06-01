@@ -230,43 +230,31 @@ server = function(input, output) {
         else if (input$Test == 4) {
             #Single Sample Z-Test
             #Create Data
-            data = data.frame(
-                X = sample(
-                    seq(input$value_range[1], input$value_range[2], by = .1),
-                    1
-                ),
-                mu = sample(
-                    seq(input$value_range[1], input$value_range[2], by = .1),
-                    1
-                ),
-                sigma = rnorm(1, (
-                    input$value_range[2] - input$value_range[1]
-                ) / 5, .1)
-            )
-            data2 = data.frame(data = dnorm(
-                seq((data$mu - (
-                    4 * data$sigma
-                )), (data$mu + (
-                    4 * data$sigma
-                )), length.out = 100),
-                mean = data$mu,
-                sd = data$sigma
-            ))
-            plotdata$data = data2
+            
+            data = rnorm_multi(n=input$num_of_participants,
+                        mu = c(sample(input$value_range[1]:input$value_range[2],1),sample(input$value_range[1]:input$value_range[2],1)),
+                        sd = c(rnorm(1, (
+                            input$value_range[2] - input$value_range[1]
+                        ) / 5, .1),rnorm(1, (
+                            input$value_range[2] - input$value_range[1]
+                        ) / 5, .1)),
+                        r = sample(seq(-1,1,.01),1),
+                        varnames = c('X','Y'))
+            plotdata$data = data
             
             #Create Table
             descriptives = data.frame(
-                Z_Value = (data$X - data$mu) / data$sigma,
-                P_Value_of_X_and_Below = round(pnorm(
-                    round((data$X - data$mu) / data$sigma, digits = 2)
-                ), digits = 4),
-                P_Value_of_X_and_Above = round(pnorm(
-                    round((data$X - data$mu) / data$sigma, digits = 2), lower.tail = F
-                ), digits = 4)
+                X_Mean = mean(data$X),
+                X_SD = sqrt(sum((data$X-mean(data$X))^2)/dim(data)[1]),
+                Y_Mean = mean(data$Y),
+                Y_SD = sqrt(sum((data$Y-mean(data$Y))^2)/dim(data)[1]),
+                SP = sum((data$X-mean(data$X))*(data$Y-mean(data$Y))),
+                COV = sum((data$X-mean(data$X))*(data$Y-mean(data$Y)))/dim(data)[1],
+                r = cor(data$X,data$Y)
             )
             #Set Outputs
             stats$data_table = descriptives
-            output$data_display = renderRHandsontable(rhandsontable(as.data.frame(t(data))))
+            output$data_display = renderRHandsontable(rhandsontable(as.data.frame(data)))
             output$stats_display = renderRHandsontable({
                 
             })
@@ -364,9 +352,14 @@ server = function(input, output) {
                  {
                      output$distribution_display = renderPlot(if (input$Test == 3) {
                          ggplot(aes(x = 1:100, y = data), data = plotdata$data) +
-                             geom_line() +
+                             geom_line()+
                              theme_void()
-                     } else{
+                     } else if (input$Test == 4){
+                         ggplot(aes(x=X,y=Y),data = plotdata$data)+
+                             geom_point()+
+                             theme_classic()
+                     }
+                     else{
                          ggplot(aes(x = data), data = plotdata$data) +
                              geom_histogram(color = "#E27D60",
                                             fill = "#E8A87C",
