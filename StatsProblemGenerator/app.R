@@ -8,6 +8,8 @@ library(rsconnect) #Shiny
 library(BSDA) #z-test function
 library(rhandsontable) #Data tables
 library(ggplot2) #Plotting
+library(faux) #Creating correlated data (rnorm_multi)
+library(rstatix) #Dependency of faux
 
 #UI
 ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}")),
@@ -21,8 +23,8 @@ ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}
                                "Descriptives" = 2,
                                "Single Participant Z-Test" = 3,
                                "Correlation & Regression" = 4,
-                               "Single Sample T-Test" = 5,
-                               "Paired Sample T-Test" = 5
+                               "Single Sample T-Test" = 4,
+                               "Paired Sample T-Test" = 4
                            ),
                            selected = 1
                        ),
@@ -49,8 +51,8 @@ ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}
                        actionButton('answers', 'Show Answers')
                    ),
                    mainPanel(fluidRow(
-                       column(3, rHandsontableOutput("data_display")),
-                       column(9, plotOutput('distribution_display'))
+                       column(4, rHandsontableOutput("data_display")),
+                       column(8, plotOutput('distribution_display'))
                    ),
                    fluidRow(column(
                        12, rHandsontableOutput("stats_display")
@@ -240,6 +242,8 @@ server = function(input, output) {
                         ) / 5, .1)),
                         r = sample(seq(-1,1,.01),1),
                         varnames = c('X','Y'))
+            data$X = as.integer(data$X)
+            data$Y = as.integer(data$Y)
             plotdata$data = data
             
             #Create Table
@@ -252,6 +256,11 @@ server = function(input, output) {
                 COV = sum((data$X-mean(data$X))*(data$Y-mean(data$Y)))/dim(data)[1],
                 r = cor(data$X,data$Y)
             )
+            descriptives$bx = descriptives$r*(descriptives$X_SD/descriptives$Y_SD)
+            descriptives$ax = descriptives$X_Mean - (descriptives$bx*descriptives$Y_Mean)
+            descriptives$by = descriptives$r*(descriptives$Y_SD/descriptives$X_SD)
+            descriptives$ay = descriptives$Y_Mean - (descriptives$by*descriptives$X_Mean)
+
             #Set Outputs
             stats$data_table = descriptives
             output$data_display = renderRHandsontable(rhandsontable(as.data.frame(data)))
@@ -356,8 +365,9 @@ server = function(input, output) {
                              theme_void()
                      } else if (input$Test == 4){
                          ggplot(aes(x=X,y=Y),data = plotdata$data)+
-                             geom_point()+
-                             theme_classic()
+                             geom_point(size=4,alpha=.5)+
+                             theme_classic()+
+                             theme(text = element_text(size=20))
                      }
                      else{
                          ggplot(aes(x = data), data = plotdata$data) +
