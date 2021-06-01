@@ -3,11 +3,11 @@
 ####                   www.chadcwilliams.com                    ####
 ####################################################################
 
-options(scipen = 999)
-library(rsconnect)
-library(BSDA)
-library(rhandsontable) #Data Tables
-library(ggplot2)
+options(scipen = 999) #Remove scientific notation
+library(rsconnect) #Shiny
+library(BSDA) #z-test function
+library(rhandsontable) #Data tables
+library(ggplot2) #Plotting
 
 #UI
 ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}")),
@@ -19,9 +19,10 @@ ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}
                            choices = list(
                                "Frequency Distribution" = 1,
                                "Descriptives" = 2,
-                               "Single Sample Z-Test" = 3,
-                               "Single Sample T-Test" = 4,
-                               "Paired Sample T-Test" = 4
+                               "Single Participant Z-Test" = 3,
+                               "Correlation & Regression" = 4,
+                               "Single Sample T-Test" = 5,
+                               "Paired Sample T-Test" = 5
                            ),
                            selected = 1
                        ),
@@ -164,35 +165,22 @@ server = function(input, output) {
             #Single Sample Z-Test
             #Create Data
             data = data.frame(
-                Data = sample(input$value_range[1]:input$value_range[2], input$num_of_participants, replace = TRUE),
-                mu = c(
-                    sample(1:20, 1),
-                    rep(NA, input$num_of_participants - 1)
-                ),
-                sigma = c(
-                    sample(1:10, 1),
-                    rep(NA, input$num_of_participants - 1)
-                )
-            )
-            data$mu[1] = as.integer(round(rnorm(
-                1, mean(data$Data), sd(data$Data) / 5
-            )))
-            plotdata$data = as.data.frame(data$Data)
-            t = z.test(data$Data,
-                       mu = data$mu[1],
-                       sigma.x = data$sigma[1])
+                X = sample(seq(input$value_range[1],input$value_range[2],by=.1), 1),
+                mu = sample(seq(input$value_range[1],input$value_range[2],by=.1), 1),
+                sigma = rnorm(1,(input$value_range[2]-input$value_range[1])/5, .1))
+            data2 = data.frame(
+                data = dnorm(seq((data$mu-(4*data$sigma)),(data$mu+(4*data$sigma)),length.out = 100), mean = data$mu, sd = data$sigma))
+            plotdata$data = data2
+            
             #Create Table
-            descriptives = data_table = data.frame(
-                Mean = mean(data$Data),
-                Variance = var(data$Data),
-                SD = sd(data$Data),
-                Z_Value = round(as.numeric(t["statistic"]), digits = 2),
-                Degrees_of_Freedom = as.numeric(input$num_of_participants - 1),
-                P_Value = round(as.numeric(t["p.value"]), digits = 4)
+            descriptives = data.frame(
+                Z_Value = (data$X-data$mu)/data$sigma,
+                P_Value_of_X_and_Below =round(pnorm(round((data$X-data$mu)/data$sigma,digits =2)),digits=4),
+                P_Value_of_X_and_Above = round(pnorm(round((data$X-data$mu)/data$sigma,digits =2),lower.tail = F),digits=4)
             )
             #Set Outputs
             stats$data_table = descriptives
-            output$data_display = renderRHandsontable(rhandsontable(as.data.frame(data)))
+            output$data_display = renderRHandsontable(rhandsontable(as.data.frame(t(data))))
             output$stats_display = renderRHandsontable({
                 
             })
@@ -271,12 +259,19 @@ server = function(input, output) {
     })
     observeEvent(input$answers,
                  {
-                     output$stats_display = renderRHandsontable(rhandsontable(stats$data_table))
+                     output$stats_display = renderRHandsontable(rhandsontable(stats$data_table)%>%
+                                                                    hot_col("P_Value_of_X_and_Below", format = "0.0000")%>%
+                                                                    hot_col("P_Value_of_X_and_Above", format = "0.0000")) 
                  })
     observeEvent(input$distribution,
                  {
                      output$distribution_display = renderPlot(
-                         ggplot(aes(x = data), data = plotdata$data) +
+                         if (input$Test == 3){
+                                ggplot(aes(x = 1:100,y = data), data = plotdata$data) +
+                                 geom_line()+
+                                 theme_void()
+                             }else{
+                                 ggplot(aes(x = data), data = plotdata$data) +
                              geom_histogram(color = "#E27D60", fill = "#E8A87C",binwidth = 1) +
                              scale_x_continuous(
                                  breaks = 1:input$value_range[2],
@@ -285,7 +280,7 @@ server = function(input, output) {
                              ) +
                              ylab('Frequency Count') +
                              theme_classic()
-                     )
+                     })
                  })
 }
 
