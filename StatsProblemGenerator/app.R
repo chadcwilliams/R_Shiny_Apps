@@ -198,15 +198,7 @@ server = function(input, output) {
                     input$value_range[2] - input$value_range[1]
                 ) / 5, .1)
             )
-            data2 = data.frame(data = dnorm(
-                seq((data$mu - (
-                    4 * data$sigma
-                )), (data$mu + (
-                    4 * data$sigma
-                )), length.out = 100),
-                mean = data$mu,
-                sd = data$sigma
-            ))
+            data2 = data.frame(data = dnorm(seq((data$mu - (4 * data$sigma)), (data$mu + (4 * data$sigma)), length.out = 100),mean = data$mu,sd = data$sigma))
             plotdata$data = data2
             
             #Create Table
@@ -230,9 +222,8 @@ server = function(input, output) {
             })
         }
         else if (input$Test == 4) {
-            #Single Sample Z-Test
+            #Correlation & Regression
             #Create Data
-            
             data = rnorm_multi(n=input$num_of_participants,
                         mu = c(sample(input$value_range[1]:input$value_range[2],1),sample(input$value_range[1]:input$value_range[2],1)),
                         sd = c(rnorm(1, (
@@ -256,10 +247,12 @@ server = function(input, output) {
                 COV = sum((data$X-mean(data$X))*(data$Y-mean(data$Y)))/dim(data)[1],
                 r = cor(data$X,data$Y)
             )
-            descriptives$bx = descriptives$r*(descriptives$X_SD/descriptives$Y_SD)
-            descriptives$ax = descriptives$X_Mean - (descriptives$bx*descriptives$Y_Mean)
             descriptives$by = descriptives$r*(descriptives$Y_SD/descriptives$X_SD)
             descriptives$ay = descriptives$Y_Mean - (descriptives$by*descriptives$X_Mean)
+            descriptives$bx = descriptives$r*(descriptives$X_SD/descriptives$Y_SD)
+            descriptives$ax = descriptives$X_Mean - (descriptives$bx*descriptives$Y_Mean)
+            descriptives$SD_Yprime = round(sqrt((sum((data$Y - (descriptives$ay+(descriptives$by*data$X)))^2)/dim(data)[1])),2)
+            descriptives$SD_XPrime = round(sqrt((sum((data$X - (descriptives$ax+(descriptives$bx*data$Y)))^2)/dim(data)[1])),2)
 
             #Set Outputs
             stats$data_table = descriptives
@@ -362,10 +355,17 @@ server = function(input, output) {
                      output$distribution_display = renderPlot(if (input$Test == 3) {
                          ggplot(aes(x = 1:100, y = data), data = plotdata$data) +
                              geom_line()+
+                             geom_vline(xintercept=round((stats$data_table$P_Value_of_X_and_Below*100))+.5,color='red')+
                              theme_void()
                      } else if (input$Test == 4){
                          ggplot(aes(x=X,y=Y),data = plotdata$data)+
                              geom_point(size=4,alpha=.5)+
+                             geom_smooth(method=lm,se=F)+
+                             geom_segment(y=min(plotdata$data$Y),
+                                          x=(stats$data_table$ax + (stats$data_table$bx*min(plotdata$data$Y))),
+                                          yend=max(plotdata$data$Y),
+                                          xend=(stats$data_table$ax + (stats$data_table$bx*max(plotdata$data$Y))),
+                                          color='red')+
                              theme_classic()+
                              theme(text = element_text(size=20))
                      }
