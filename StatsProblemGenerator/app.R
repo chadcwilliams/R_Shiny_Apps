@@ -51,8 +51,8 @@ ui = fluidPage(tags$head(tags$style(type = "text/css", ".irs {max-width: 946px;}
                        actionButton('answers', 'Show Answers')
                    ),
                    mainPanel(fluidRow(
-                       column(4, rHandsontableOutput("data_display")),
-                       column(8, plotOutput('distribution_display'))
+                       column(6, rHandsontableOutput("data_display")),
+                       column(6, plotOutput('distribution_display'))
                    ),
                    fluidRow(column(
                        12, rHandsontableOutput("stats_display")
@@ -235,6 +235,8 @@ server = function(input, output) {
                         varnames = c('X','Y'))
             data$X = as.integer(data$X)
             data$Y = as.integer(data$Y)
+            data$X_SD = c(sqrt(sum((data$X-mean(data$X))^2)/dim(data)[1]),rep(NA,dim(data)[1]-1))
+            data$Y_SD = c(sqrt(sum((data$Y-mean(data$Y))^2)/dim(data)[1]),rep(NA,dim(data)[1]-1))
             plotdata$data = data
             
             #Create Table
