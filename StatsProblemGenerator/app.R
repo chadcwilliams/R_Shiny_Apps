@@ -253,8 +253,8 @@ server = function(input, output) {
             descriptives$ay = descriptives$Y_Mean - (descriptives$by*descriptives$X_Mean)
             descriptives$bx = descriptives$r*(descriptives$X_SD/descriptives$Y_SD)
             descriptives$ax = descriptives$X_Mean - (descriptives$bx*descriptives$Y_Mean)
-            descriptives$SD_Yprime = round(sqrt((sum((data$Y - (descriptives$ay+(descriptives$by*data$X)))^2)/dim(data)[1])),2)
-            descriptives$SD_XPrime = round(sqrt((sum((data$X - (descriptives$ax+(descriptives$bx*data$Y)))^2)/dim(data)[1])),2)
+            descriptives$SD_XPrime = round((descriptives$X_SD*(sqrt(1-(abs(cor(data$X,data$Y))^2)))),2)
+            descriptives$SD_Yprime = round((descriptives$Y_SD*(sqrt(1-(abs(cor(data$X,data$Y))^2)))),2)
 
             #Set Outputs
             stats$data_table = descriptives
