@@ -426,7 +426,9 @@ server = function(input, output) {
                             rep(NA, input$num_of_participants - 1))
             plotdata$data = as.data.frame(data$Data)
             #Create Stats
-            t = t.test(data$Data,mu=data$mu[1])
+            t=if (direction == 1){t.test(data$Data,mu=data$mu[1])
+            }else if (direction == 2) {t.test(data$Data,mu=data$mu[1],alternative = 'less')
+                    }else{t.test(data$Data,mu=data$mu[1],alternative = 'greater')}
             descriptives = data_table = data.frame(
                 SS = sum(((data$Data - mean(data$Data))^2)),
                 s = sd(data$Data),
