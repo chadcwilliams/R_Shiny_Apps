@@ -341,7 +341,7 @@ server = function(input, output) {
             plotdata$data = as.data.frame(data$Data)
             #Create Stats
             descriptives = data_table = data.frame(
-                SE = data$mu[1] / sqrt(input$num_of_participants),
+                SE = data$sigma[1] / sqrt(input$num_of_participants),
                 z_Obs = (data$X_Mean[1] - data$mu[1]) / (data$sigma[1] /
                                                              sqrt(input$num_of_participants)),
                 z_Crit = if (direction == 1) {
@@ -497,6 +497,9 @@ server = function(input, output) {
                          rhandsontable(stats$data_table) %>%
                              hot_col("P_Value_of_X_and_Below", format = "0.0000") %>%
                              hot_col("P_Value_of_X_and_Above", format = "0.0000")
+                     }else if (input$Test == 5 | input$Test == 6){
+                         rhandsontable(stats$data_table) %>%
+                             hot_col("p_obs", format = "0.0000")
                      }
                      else{
                          rhandsontable(stats$data_table)
